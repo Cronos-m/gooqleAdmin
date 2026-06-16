@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gooqle - Panel de Control</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            padding: 50px; 
+            background: #0f172a; 
+            color: white; 
+        }
+        .container { 
+            max-width: 400px; 
+            margin: auto; 
+            background: #1e293b; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        h1 { color: #3b82f6; }
+        input { 
+            padding: 15px; 
+            width: 85%; 
+            margin-bottom: 20px; 
+            border-radius: 8px; 
+            border: none; 
+            font-size: 16px; 
+            text-align: center;
+        }
+        button { 
+            padding: 15px 30px; 
+            cursor: pointer; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Gooqle Admin</h1>
+        <p>Genera o entra a una sala:</p>
+        <input type="text" id="sala" placeholder="Ej: Cronos" autofocus>
+        <br>
+        <button onclick="entrar()">Acceder a la Sala</button>
+    </div>
+
+    <script>
+        function entrar() {
+            const sala = document.getElementById('sala').value.trim();
+            if (sala) {
+                // Aquí apunta a tu servidor de Firebase donde vive el sistema
+                window.location.href = "https://gooqledata.web.app/" + encodeURIComponent(sala);
+            } else {
+                alert("Por favor, ingresa el nombre de una sala.");
+            }
+        }
+
+        // Permite presionar Enter para entrar
+        document.getElementById("sala").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                entrar();
+            }
+        });
+    </script>
+</body>
+</html>
