@@ -1,76 +1,53 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gooqle - Panel de Control</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; 
-            padding: 50px; 
-            background: #0f172a; 
-            color: white; 
-        }
-        .container { 
-            max-width: 400px; 
-            margin: auto; 
-            background: #1e293b; 
-            padding: 30px; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        h1 { color: #3b82f6; }
-        input { 
-            padding: 15px; 
-            width: 85%; 
-            margin-bottom: 20px; 
-            border-radius: 8px; 
-            border: none; 
-            font-size: 16px; 
-            text-align: center;
-        }
-        button { 
-            padding: 15px 30px; 
-            cursor: pointer; 
-            background: #3b82f6; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            width: 100%;
-            transition: background 0.3s;
-        }
-        button:hover { background: #2563eb; }
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 50px; }
+        .container { max-width: 400px; margin: auto; background: #1e293b; padding: 20px; border-radius: 10px; }
+        input { padding: 10px; width: 80%; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; background: #3b82f6; border: none; color: white; cursor: pointer; margin-top: 10px; }
+        #links { margin-top: 20px; display: none; }
+        a { display: block; color: #60a5fa; margin: 10px 0; text-decoration: none; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <h1>Gooqle Admin</h1>
-        <p>Genera o entra a una sala:</p>
-        <input type="text" id="sala" placeholder="Ej: Cronos" autofocus>
+        <input type="text" id="sala" placeholder="Nombre de la sala">
         <br>
-        <button onclick="entrar()">Acceder a la Sala</button>
+        <button onclick="gestionarSala()">Gestionar Sala</button>
+
+        <div id="links">
+            <p>Sala: <span id="nombreSala"></span></p>
+            <a id="linkG" href="#" target="_blank">Abrir Buscador (g)</a>
+            <a id="linkM" href="#" target="_blank">Abrir Monitor (m)</a>
+            <a id="linkY" href="#" target="_blank">Abrir YouTube (yt)</a>
+        </div>
     </div>
 
     <script>
-        function entrar() {
-            const sala = document.getElementById('sala').value.trim();
-            if (sala) {
-                // Aquí apunta a tu servidor de Firebase donde vive el sistema
-                window.location.href = "https://gooqledata.web.app/" + encodeURIComponent(sala);
-            } else {
-                alert("Por favor, ingresa el nombre de una sala.");
-            }
-        }
+        // Configuración de tu Firebase
+        const firebaseConfig = { databaseURL: "TU_DATABASE_URL_DE_FIREBASE" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        // Permite presionar Enter para entrar
-        document.getElementById("sala").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                entrar();
-            }
-        });
+        function gestionarSala() {
+            const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
+            if (!sala) return;
+
+            // 1. Crear sala permanente (si no existe, la crea)
+            db.ref('salas/' + sala).update({ creado: true, fecha: Date.now() });
+
+            // 2. Mostrar los 3 links
+            document.getElementById('nombreSala').innerText = sala;
+            document.getElementById('linkG').href = "https://gooqledata.web.app/g.html?id=" + sala;
+            document.getElementById('linkM').href = "https://gooqledata.web.app/m.html?id=" + sala;
+            document.getElementById('linkY').href = "https://gooqledata.web.app/yt.html?id=" + sala;
+            
+            document.getElementById('links').style.display = 'block';
+        }
     </script>
 </body>
 </html>
