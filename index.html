@@ -2,51 +2,42 @@
 <html lang="es">
 <head>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 50px; }
-        .container { max-width: 400px; margin: auto; background: #1e293b; padding: 20px; border-radius: 10px; }
-        input { padding: 10px; width: 80%; border-radius: 5px; border: none; }
-        button { padding: 10px 20px; background: #3b82f6; border: none; color: white; cursor: pointer; margin-top: 10px; }
-        #links { margin-top: 20px; display: none; }
-        a { display: block; color: #60a5fa; margin: 10px 0; text-decoration: none; }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Gooqle Admin</h1>
-        <input type="text" id="sala" placeholder="Nombre de la sala">
-        <br>
-        <button onclick="gestionarSala()">Gestionar Sala</button>
-
-        <div id="links">
-            <p>Sala: <span id="nombreSala"></span></p>
-            <a id="linkG" href="#" target="_blank">Abrir Buscador (g)</a>
-            <a id="linkM" href="#" target="_blank">Abrir Monitor (m)</a>
-            <a id="linkY" href="#" target="_blank">Abrir YouTube (yt)</a>
-        </div>
+    <div id="login-section">
+        <button onclick="googleLogin()">Iniciar Sesión con Google</button>
+    </div>
+    
+    <div id="admin-section" style="display:none;">
+        <h1>Hola Maestro</h1>
+        <input type="text" id="sala" placeholder="Nombre de sala">
+        <button onclick="crearSala()">Crear Sala</button>
     </div>
 
     <script>
-        // Configuración de tu Firebase
-        const firebaseConfig = { databaseURL: "TU_DATABASE_URL_DE_FIREBASE" };
+        const firebaseConfig = { /* Tu config aquí */ };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
-        function gestionarSala() {
-            const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
-            if (!sala) return;
+        function googleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider);
+        }
 
-            // 1. Crear sala permanente (si no existe, la crea)
-            db.ref('salas/' + sala).update({ creado: true, fecha: Date.now() });
+        // Detectar si el usuario está conectado
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                // Aquí podrías añadir una validación extra: 
+                // if (user.email !== "tucorreo@gmail.com") { alert("No autorizado"); return; }
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('admin-section').style.display = 'block';
+            }
+        });
 
-            // 2. Mostrar los 3 links
-            document.getElementById('nombreSala').innerText = sala;
-            document.getElementById('linkG').href = "https://gooqledata.web.app/g.html?id=" + sala;
-            document.getElementById('linkM').href = "https://gooqledata.web.app/m.html?id=" + sala;
-            document.getElementById('linkY').href = "https://gooqledata.web.app/yt.html?id=" + sala;
-            
-            document.getElementById('links').style.display = 'block';
+        function crearSala() {
+            const sala = document.getElementById('sala').value.trim();
+            // ... (Lógica de verificación de existencia de antes)
         }
     </script>
 </body>
