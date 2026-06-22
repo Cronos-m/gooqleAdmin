@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
     <title>Gooqle Admin Maestro</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
@@ -10,24 +14,27 @@
         body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding-top: 50px; }
         .box { background: #1e293b; padding: 20px; border-radius: 10px; display: inline-block; width: 80%; max-width: 500px; }
         input { padding: 10px; width: 80%; border-radius: 5px; border: none; margin-bottom: 10px; }
-        button { padding: 10px 20px; background: #3b82f6; border: none; color: white; cursor: pointer; border-radius: 5px; }
+        button { padding: 10px 20px; border: none; color: white; cursor: pointer; border-radius: 5px; margin: 5px; }
+        .blue-btn { background: #3b82f6; }
+        .red-btn { background: #ef4444; }
+        .gray-btn { background: #64748b; }
         table { width: 100%; margin-top: 20px; border-collapse: collapse; }
         th, td { padding: 10px; border-bottom: 1px solid #334155; }
-        .del-btn { background: #ef4444; }
     </style>
 </head>
 <body>
 
     <div id="login-section" class="box">
         <h1>Acceso al Panel</h1>
-        <button onclick="googleLogin()">Iniciar Sesión con Google</button>
+        <button class="blue-btn" onclick="googleLogin()">Iniciar Sesión con Google</button>
     </div>
 
     <div id="admin-section" class="box" style="display:none;">
         <h1>Panel Maestro</h1>
         <input type="text" id="sala" placeholder="Nombre de la nueva sala">
         <br>
-        <button onclick="gestionarSala()">Crear Sala</button>
+        <button class="blue-btn" onclick="gestionarSala()">Crear Sala</button>
+        <button class="gray-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
         
         <hr style="margin: 20px 0; border: 0; border-top: 1px solid #334155;">
         
@@ -59,6 +66,15 @@
             auth.signInWithPopup(provider).catch(e => alert("Error: " + e.message));
         }
 
+        function cerrarSesion() {
+            auth.signOut().then(() => {
+                // Forzamos la recarga de la página para limpiar estado y caché
+                window.location.reload(true);
+            }).catch((error) => {
+                alert("Error al cerrar sesión: " + error.message);
+            });
+        }
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 if (user.email === "luistorresbruno52@gmail.com") {
@@ -66,9 +82,12 @@
                     document.getElementById('admin-section').style.display = 'block';
                     cargarSalas();
                 } else {
-                    alert("Acceso denegado.");
+                    alert("Acceso denegado: No tienes permisos.");
                     auth.signOut();
                 }
+            } else {
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('admin-section').style.display = 'none';
             }
         });
 
@@ -92,7 +111,7 @@
                 lista.innerHTML = "";
                 snapshot.forEach((child) => {
                     const nombre = child.key;
-                    lista.innerHTML += `<tr><td>${nombre}</td><td><button class="del-btn" onclick="eliminarSala('${nombre}')">Eliminar</button></td></tr>`;
+                    lista.innerHTML += `<tr><td>${nombre}</td><td><button class="red-btn" onclick="eliminarSala('${nombre}')">Eliminar</button></td></tr>`;
                 });
             });
         }
