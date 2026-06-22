@@ -100,35 +100,41 @@
             });
         }
 
-        function cargarSalas() {
-            db.ref('salas').on('value', (snapshot) => {
-                const lista = document.getElementById('listaSalas');
-                lista.innerHTML = "";
-                snapshot.forEach((child) => {
-                    const nombre = child.key;
-                    const links = child.val().links || { google: "", youtube: "", monitor: "" };
-                    const linksStr = JSON.stringify(links).replace(/"/g, '&quot;');
-                    
-                    lista.innerHTML += `
-                        <tr>
-                            <td>${nombre}</td>
-                            <td>
-                                <button class="blue-btn" style="padding:4px; font-size:10px;" onclick="editarSala('${nombre}')">Editar</button>
-                                <button class="red-btn" style="padding:4px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
-                                <br>
-                                <button style="padding:4px; font-size:10px; margin-top:5px; background:#10b981; color:white; border:none; border-radius:3px;" onclick="enviarTelegram('${nombre}', ${linksStr})">Telegram</button>
-                                <button style="padding:4px; font-size:10px; margin-top:5px; background:#8b5cf6; color:white; border:none; border-radius:3px;" onclick="enviarWhatsApp(${linksStr})">WhatsApp</button>
-                            </td>
-                        </tr>`;
-                });
+      function cargarSalas() {
+    db.ref('salas').on('value', (snapshot) => {
+        const lista = document.getElementById('listaSalas');
+        lista.innerHTML = "";
+        snapshot.forEach((child) => {
+            const nombre = child.key;
+            const links = child.val().links || { google: "", youtube: "", monitor: "" };
+            // Usamos JSON.stringify con comillas escapadas para evitar errores
+            const linksStr = JSON.stringify(links).replace(/"/g, '&quot;');
+            
+            lista.innerHTML += `
+                <tr>
+                    <td>${nombre}</td>
+                    <td>
+                        <button class="blue-btn" style="padding:4px; font-size:10px;" onclick="editarSala('${nombre}')">Editar</button>
+                        <button class="red-btn" style="padding:4px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
+                        <br>
+                        <button style="padding:4px; font-size:10px; margin-top:5px; background:#10b981; color:white; border:none; border-radius:3px;" onclick="enviarTelegram('${nombre}', ${linksStr})">Telegram</button>
+                        <button style="padding:4px; font-size:10px; margin-top:5px; background:#8b5cf6; color:white; border:none; border-radius:3px;" onclick="enviarWhatsApp(${linksStr})">WhatsApp</button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
+function eliminarSala(nombre) {
+    if (confirm("¿Estás seguro de que quieres eliminar la sala: " + nombre + "?")) {
+        db.ref('salas/' + nombre).remove()
+            .then(() => {
+                alert("Sala eliminada correctamente.");
+            })
+            .catch((error) => {
+                alert("Error al eliminar: " + error.message);
             });
-        }
-
-        function eliminarSala(nombre) {
-            if (confirm("¿Estás seguro de eliminar la sala: " + nombre + "?")) {
-                db.ref('salas/' + nombre).remove();
-            }
-        }
+    }
+}
 
         function editarSala(nombreActual) {
             const nuevoNombre = prompt("Nuevo nombre:", nombreActual);
