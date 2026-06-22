@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -10,16 +11,40 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding-top: 50px; }
-        .box { background: #1e293b; padding: 20px; border-radius: 10px; display: inline-block; width: 80%; max-width: 500px; }
-        input { padding: 10px; width: 80%; border-radius: 5px; border: none; margin-bottom: 10px; }
-        button { padding: 10px 20px; border: none; color: white; cursor: pointer; border-radius: 5px; margin: 5px; }
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; box-sizing: border-box; }
+        .box { 
+            background: #1e293b; 
+            padding: 20px; 
+            border-radius: 10px; 
+            display: inline-block; 
+            width: 100%; 
+            max-width: 500px; 
+            box-sizing: border-box; 
+        }
+        input { 
+            padding: 12px; 
+            width: 100%; 
+            border-radius: 5px; 
+            border: none; 
+            margin-bottom: 10px; 
+            box-sizing: border-box; 
+        }
+        button { 
+            padding: 12px; 
+            border: none; 
+            color: white; 
+            cursor: pointer; 
+            border-radius: 5px; 
+            margin: 5px; 
+            width: 100%;
+        }
         .blue-btn { background: #3b82f6; }
-        .red-btn { background: #ef4444; }
+        .red-btn { background: #ef4444; width: auto; padding: 8px 15px; }
         .gray-btn { background: #64748b; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { padding: 10px; border-bottom: 1px solid #334155; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 10px; border-bottom: 1px solid #334155; word-wrap: break-word; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -32,7 +57,6 @@
     <div id="admin-section" class="box" style="display:none;">
         <h1>Panel Maestro</h1>
         <input type="text" id="sala" placeholder="Nombre de la nueva sala">
-        <br>
         <button class="blue-btn" onclick="gestionarSala()">Crear Sala</button>
         <button class="gray-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
         
@@ -68,7 +92,6 @@
 
         function cerrarSesion() {
             auth.signOut().then(() => {
-                // Forzamos la recarga de la página para limpiar estado y caché
                 window.location.reload(true);
             }).catch((error) => {
                 alert("Error al cerrar sesión: " + error.message);
