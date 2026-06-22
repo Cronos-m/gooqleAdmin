@@ -123,39 +123,56 @@
             }
         });
 
-        function gestionarSala() {
-            const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
-            if (!sala) return;
+function gestionarSala() {
+    const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
+    if (!sala) return;
 
-            db.ref('salas/' + sala).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    alert("¡Error: Sala ya existente!");
-                } else {
-                    db.ref('salas/' + sala).set({ creadoPor: auth.currentUser.email, fecha: Date.now() });
-                    document.getElementById('sala').value = "";
-                }
-            });
-        }
+    // Supongamos que tienes inputs para los links, o puedes definirlos aquí
+    const linkG = "https://google.com/search?q=" + sala;
+    const linkY = "https://youtube.com/results?search_query=" + sala;
+    const linkM = "https://tu-monitor.com/" + sala;
+
+    const datosSala = {
+        creadoPor: auth.currentUser.email,
+        fecha: Date.now(),
+        links: { google: linkG, youtube: linkY, monitor: linkM }
+    };
+
+    db.ref('salas/' + sala).set(datosSala).then(() => {
+        alert("Sala creada.");
+        // Enviamos los links a Telegram
+        enviarTelegram(sala, datosSala.links);
+    });
+}
 
 
 function cargarSalas() {
-            db.ref('salas').on('value', (snapshot) => {
-                const lista = document.getElementById('listaSalas');
-                lista.innerHTML = "";
-                snapshot.forEach((child) => {
-                    const nombre = child.key;
-                    // Fila con botones de Editar y Eliminar
-                    lista.innerHTML += `
-                        <tr>
-                            <td>${nombre}</td>
-                            <td>
-                                <button class="blue-btn" style="padding:5px; font-size:12px;" onclick="editarSala('${nombre}')">Editar</button>
-                                <button class="red-btn" style="padding:5px; font-size:12px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
-                            </td>
-                        </tr>`;
-                });
-            });
-        }
+    db.ref('salas').on('value', (snapshot) => {
+        const lista = document.getElementById('listaSalas');
+        lista.innerHTML = "";
+        snapshot.forEach((child) => {
+            const nombre = child.key;
+            // Definimos los links basados en el nombre de la sala
+            const links = {
+                google: "https://google.com/search?q=" + nombre,
+                youtube: "https://youtube.com/results?search_query=" + nombre,
+                monitor: "https://tu-monitor.com/" + nombre
+            };
+
+            lista.innerHTML += `
+                <tr>
+                    <td>${nombre}</td>
+                    <td>
+                        <button class="blue-btn" style="padding:5px; font-size:10px;" onclick="editarSala('${nombre}')">Editar</button>
+                        <button class="red-btn" style="padding:5px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
+                        <br>
+                        <button class="gray-btn" style="padding:5px; font-size:10px; margin-top:5px; background:#10b981;" onclick="enviarTelegram('${nombre}', ${JSON.stringify(links).replace(/"/g, "'")})">Enviar Telegram</button>
+                        <button class="gray-btn" style="padding:5px; font-size:10px; margin-top:5px; background:#8b5cf6;" onclick="enviarWhatsApp(${JSON.stringify(links).replace(/"/g, "'")})">Enviar WhatsApp</button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
 
         function editarSala(nombreActual) {
             const nuevoNombre = prompt("Introduce el nuevo nombre para la sala:", nombreActual);
@@ -175,6 +192,30 @@ function cargarSalas() {
                 }).catch(e => alert("Error: " + e.message));
             }
         }
+
+function enviarTelegram(nombreSala, links) {
+    const token = "8642789057:AAET8otpQWLg3xoNFQwdRupbOVXgxVT0vcU"; 
+    const chatId = "1304022395"; // Asegúrate de poner tu ID aquí
+    
+    const mensaje = `✅ *Sala: ${nombreSala}*\n\n` +
+                    `🌐 Google: ${links.google}\n` +
+                    `📺 YouTube: ${links.youtube}\n` +
+                    `🖥 Monitor: ${links.monitor}`;
+    
+    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}&parse_mode=Markdown`;
+    
+    fetch(url).then(r => alert("Enviado a Telegram")).catch(e => alert("Error"));
+}
+
+function enviarWhatsApp(links) {
+    const telefono = prompt("Introduce el número de WhatsApp (con código de país, ej: 573001234567):");
+    if (!telefono) return;
+    
+    const mensaje = encodeURIComponent(`Links de la sala:\nGoogle: ${links.google}\nYouTube: ${links.youtube}\nMonitor: ${links.monitor}`);
+    window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
+}
+
+        
     </script>
 </body>
 </html>
