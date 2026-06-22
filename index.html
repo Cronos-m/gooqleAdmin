@@ -1,43 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <title>Gooqle Admin Maestro</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding-top: 50px; }
+        .box { background: #1e293b; padding: 20px; border-radius: 10px; display: inline-block; }
+        input { padding: 10px; width: 250px; border-radius: 5px; border: none; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: #3b82f6; border: none; color: white; cursor: pointer; border-radius: 5px; }
+    </style>
 </head>
 <body>
-    <div id="login-section">
+
+    <div id="login-section" class="box">
+        <h1>Acceso al Panel</h1>
         <button onclick="googleLogin()">Iniciar Sesión con Google</button>
     </div>
-    
-    <div id="admin-section" style="display:none;">
-        <h1>Hola Maestro</h1>
-        <input type="text" id="sala" placeholder="Nombre de sala">
-        <button onclick="crearSala()">Crear Sala</button>
+
+    <div id="admin-section" class="box" style="display:none;">
+        <h1>Panel Maestro</h1>
+        <input type="text" id="sala" placeholder="Nombre de la nueva sala">
+        <br>
+        <button onclick="gestionarSala()">Crear Sala</button>
     </div>
 
     <script>
-        const firebaseConfig = { /* Tu config aquí */ };
+        // 1. RELLENA ESTO CON TUS DATOS DE FIREBASE
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            databaseURL: "https://TU_PROYECTO.firebaseio.com",
+            projectId: "TU_PROYECTO",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TU_ID",
+            appId: "TU_APP_ID"
+        };
         firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.database();
 
         function googleLogin() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider);
+            auth.signInWithPopup(provider).catch(e => alert("Error: " + e.message));
         }
 
-        // Detectar si el usuario está conectado
-        firebase.auth().onAuthStateChanged(user => {
+        // 2. VALIDACIÓN DE ACCESO MAESTRO
+        auth.onAuthStateChanged(user => {
             if (user) {
-                // Aquí podrías añadir una validación extra: 
-                // if (user.email !== "tucorreo@gmail.com") { alert("No autorizado"); return; }
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('admin-section').style.display = 'block';
+                // CAMBIA ESTO POR TU CORREO REAL
+                if (user.email === "tu-email@gmail.com") {
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('admin-section').style.display = 'block';
+                } else {
+                    alert("Acceso denegado: No eres el maestro.");
+                    auth.signOut();
+                }
             }
         });
 
-        function crearSala() {
-            const sala = document.getElementById('sala').value.trim();
-            // ... (Lógica de verificación de existencia de antes)
+        // 3. LÓGICA DE CREACIÓN DE SALAS
+        function gestionarSala() {
+            const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
+            if (!sala) return;
+
+            db.ref('salas/' + sala).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    alert("¡Error: Sala ya existente!");
+                } else {
+                    db.ref('salas/' + sala).set({
+                        creadoPor: auth.currentUser.email,
+                        fecha: Date.now()
+                    });
+                    alert("Sala '" + sala + "' creada con éxito.");
+                }
+            });
         }
     </script>
 </body>
