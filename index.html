@@ -146,13 +146,31 @@ function eliminarSala(nombre) {
             }
         }
 
-        function enviarTelegram(nombreSala, links) {
-            const token = "8642789057:AAET8otpQWLg3xoNFQwdRupbOVXgxVT0vcU"; 
-            const chatId = "1304022395";
-            const mensaje = `✅ *Sala: ${nombreSala}*\n\n🌐 Google: ${links.google}\n📺 YouTube: ${links.youtube}\n🖥 Monitor: ${links.monitor}`;
-            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}&parse_mode=Markdown`;
-            fetch(url).then(r => alert("Enviado a Telegram")).catch(e => alert("Error"));
-        }
+function enviarTelegram(nombreSala, links) {
+    const token = "8642789057:AAET8otpQWLg3xoNFQwdRupbOVXgxVT0vcU"; 
+    const chatId = "1304022395"; 
+    
+    const mensaje = `✅ *Sala: ${nombreSala}*\n\n` +
+                    `🌐 Google: ${links.google}\n` +
+                    `📺 YouTube: ${links.youtube}\n` +
+                    `🖥 Monitor: ${links.monitor}`;
+    
+    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}&parse_mode=Markdown`;
+    
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                alert("¡Mensaje enviado a Telegram correctamente!");
+            } else {
+                alert("Error de Telegram: " + data.description);
+                console.error(data);
+            }
+        })
+        .catch(e => {
+            alert("Error al conectar con Telegram: " + e.message);
+        });
+}
 
         function enviarWhatsApp(links) {
             const telefono = prompt("Número de WhatsApp (ej: 573001234567):");
