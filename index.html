@@ -14,41 +14,13 @@
     
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 15px; box-sizing: border-box; margin: 0; }
-        .box { 
-            background: #1e293b; 
-            padding: 20px; 
-            border-radius: 10px; 
-            width: 100%; 
-            max-width: 500px; 
-            margin: 0 auto; 
-            box-sizing: border-box; 
-        }
-        input { 
-            padding: 15px; 
-            width: 100%; 
-            border-radius: 5px; 
-            border: none; 
-            margin-bottom: 15px; 
-            box-sizing: border-box; 
-        }
-        .button-group { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
-        button { 
-            padding: 12px; 
-            border: none; 
-            color: white; 
-            cursor: pointer; 
-            border-radius: 5px; 
-            width: 100%; 
-            font-size: 16px;
-        }
-        .blue-btn { background: #3b82f6; width: auto; padding: 8px 15px; }
-        .red-btn { background: #ef4444; width: auto; padding: 8px 15px; }
+        .box { background: #1e293b; padding: 20px; border-radius: 10px; width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; }
+        input { padding: 15px; width: 100%; border-radius: 5px; border: none; margin-bottom: 15px; box-sizing: border-box; }
+        .button-group { display: flex; flex-direction: column; gap: 10px; }
+        button { padding: 12px; border: none; color: white; cursor: pointer; border-radius: 5px; width: 100%; font-size: 16px; }
+        .blue-btn { background: #3b82f6; }
+        .red-btn { background: #ef4444; }
         .gray-btn { background: #64748b; }
-        
         table { width: 100%; margin-top: 20px; border-collapse: collapse; table-layout: fixed; }
         th, td { padding: 10px; border-bottom: 1px solid #334155; font-size: 14px; word-wrap: break-word; }
     </style>
@@ -100,122 +72,86 @@
         }
 
         function cerrarSesion() {
-            auth.signOut().then(() => {
-                window.location.reload(true);
-            }).catch((error) => {
-                alert("Error al cerrar sesión: " + error.message);
-            });
+            auth.signOut().then(() => window.location.reload(true));
         }
 
         auth.onAuthStateChanged(user => {
-            if (user) {
-                if (user.email === "luistorresbruno52@gmail.com") {
-                    document.getElementById('login-section').style.display = 'none';
-                    document.getElementById('admin-section').style.display = 'block';
-                    cargarSalas();
-                } else {
-                    alert("Acceso denegado: No tienes permisos.");
-                    auth.signOut();
-                }
+            if (user && user.email === "luistorresbruno52@gmail.com") {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('admin-section').style.display = 'block';
+                cargarSalas();
             } else {
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('admin-section').style.display = 'none';
             }
         });
 
-function gestionarSala() {
-    const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
-    if (!sala) return;
-
-    // Supongamos que tienes inputs para los links, o puedes definirlos aquí
-    const linkG = "https://google.com/search?q=" + sala;
-    const linkY = "https://youtube.com/results?search_query=" + sala;
-    const linkM = "https://tu-monitor.com/" + sala;
-
-    const datosSala = {
-        creadoPor: auth.currentUser.email,
-        fecha: Date.now(),
-        links: { google: linkG, youtube: linkY, monitor: linkM }
-    };
-
-    db.ref('salas/' + sala).set(datosSala).then(() => {
-        alert("Sala creada.");
-        // Enviamos los links a Telegram
-        enviarTelegram(sala, datosSala.links);
-    });
-}
-
-
-function cargarSalas() {
-    db.ref('salas').on('value', (snapshot) => {
-        const lista = document.getElementById('listaSalas');
-        lista.innerHTML = "";
-        snapshot.forEach((child) => {
-            const nombre = child.key;
-            // Definimos los links basados en el nombre de la sala
+        function gestionarSala() {
+            const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
+            if (!sala) return;
             const links = {
-                google: "https://google.com/search?q=" + nombre,
-                youtube: "https://youtube.com/results?search_query=" + nombre,
-                monitor: "https://tu-monitor.com/" + nombre
+                google: "https://google.com/search?q=" + sala,
+                youtube: "https://youtube.com/results?search_query=" + sala,
+                monitor: "https://tu-monitor.com/" + sala
             };
+            db.ref('salas/' + sala).set({ creadoPor: auth.currentUser.email, fecha: Date.now(), links: links }).then(() => {
+                alert("Sala creada.");
+                enviarTelegram(sala, links);
+            });
+        }
 
-            lista.innerHTML += `
-                <tr>
-                    <td>${nombre}</td>
-                    <td>
-                        <button class="blue-btn" style="padding:5px; font-size:10px;" onclick="editarSala('${nombre}')">Editar</button>
-                        <button class="red-btn" style="padding:5px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
-                        <br>
-                        <button class="gray-btn" style="padding:5px; font-size:10px; margin-top:5px; background:#10b981;" onclick="enviarTelegram('${nombre}', ${JSON.stringify(links).replace(/"/g, "'")})">Enviar Telegram</button>
-                        <button class="gray-btn" style="padding:5px; font-size:10px; margin-top:5px; background:#8b5cf6;" onclick="enviarWhatsApp(${JSON.stringify(links).replace(/"/g, "'")})">Enviar WhatsApp</button>
-                    </td>
-                </tr>`;
-        });
-    });
-}
+        function cargarSalas() {
+            db.ref('salas').on('value', (snapshot) => {
+                const lista = document.getElementById('listaSalas');
+                lista.innerHTML = "";
+                snapshot.forEach((child) => {
+                    const nombre = child.key;
+                    const links = child.val().links || { google: "", youtube: "", monitor: "" };
+                    const linksStr = JSON.stringify(links).replace(/"/g, '&quot;');
+                    
+                    lista.innerHTML += `
+                        <tr>
+                            <td>${nombre}</td>
+                            <td>
+                                <button class="blue-btn" style="padding:4px; font-size:10px;" onclick="editarSala('${nombre}')">Editar</button>
+                                <button class="red-btn" style="padding:4px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
+                                <br>
+                                <button style="padding:4px; font-size:10px; margin-top:5px; background:#10b981; color:white; border:none; border-radius:3px;" onclick="enviarTelegram('${nombre}', ${linksStr})">Telegram</button>
+                                <button style="padding:4px; font-size:10px; margin-top:5px; background:#8b5cf6; color:white; border:none; border-radius:3px;" onclick="enviarWhatsApp(${linksStr})">WhatsApp</button>
+                            </td>
+                        </tr>`;
+                });
+            });
+        }
 
-        function editarSala(nombreActual) {
-            const nuevoNombre = prompt("Introduce el nuevo nombre para la sala:", nombreActual);
-            
-            // Validamos que el nombre no esté vacío y sea distinto al original
-            if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) {
-                const nombreLimpio = nuevoNombre.trim().replace(/\s+/g, '-');
-                
-                // 1. Creamos la nueva entrada
-                db.ref('salas/' + nombreLimpio).set({ 
-                    creadoPor: auth.currentUser.email, 
-                    fecha: Date.now() 
-                }).then(() => {
-                    // 2. Eliminamos la antigua
-                    db.ref('salas/' + nombreActual).remove();
-                    alert("Sala renombrada con éxito.");
-                }).catch(e => alert("Error: " + e.message));
+        function eliminarSala(nombre) {
+            if (confirm("¿Estás seguro de eliminar la sala: " + nombre + "?")) {
+                db.ref('salas/' + nombre).remove();
             }
         }
 
-function enviarTelegram(nombreSala, links) {
-    const token = "8642789057:AAET8otpQWLg3xoNFQwdRupbOVXgxVT0vcU"; 
-    const chatId = "1304022395"; // Asegúrate de poner tu ID aquí
-    
-    const mensaje = `✅ *Sala: ${nombreSala}*\n\n` +
-                    `🌐 Google: ${links.google}\n` +
-                    `📺 YouTube: ${links.youtube}\n` +
-                    `🖥 Monitor: ${links.monitor}`;
-    
-    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}&parse_mode=Markdown`;
-    
-    fetch(url).then(r => alert("Enviado a Telegram")).catch(e => alert("Error"));
-}
+        function editarSala(nombreActual) {
+            const nuevoNombre = prompt("Nuevo nombre:", nombreActual);
+            if (nuevoNombre && nuevoNombre !== nombreActual) {
+                db.ref('salas/' + nombreActual).once('value', (snap) => {
+                    db.ref('salas/' + nuevoNombre).set(snap.val());
+                    db.ref('salas/' + nombreActual).remove();
+                });
+            }
+        }
 
-function enviarWhatsApp(links) {
-    const telefono = prompt("Introduce el número de WhatsApp (con código de país, ej: 573001234567):");
-    if (!telefono) return;
-    
-    const mensaje = encodeURIComponent(`Links de la sala:\nGoogle: ${links.google}\nYouTube: ${links.youtube}\nMonitor: ${links.monitor}`);
-    window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
-}
+        function enviarTelegram(nombreSala, links) {
+            const token = "8642789057:AAET8otpQWLg3xoNFQwdRupbOVXgxVT0vcU"; 
+            const chatId = "1304022395";
+            const mensaje = `✅ *Sala: ${nombreSala}*\n\n🌐 Google: ${links.google}\n📺 YouTube: ${links.youtube}\n🖥 Monitor: ${links.monitor}`;
+            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}&parse_mode=Markdown`;
+            fetch(url).then(r => alert("Enviado a Telegram")).catch(e => alert("Error"));
+        }
 
-        
+        function enviarWhatsApp(links) {
+            const telefono = prompt("Número de WhatsApp (ej: 573001234567):");
+            if (telefono) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(`Links:\nGoogle: ${links.google}\nYouTube: ${links.youtube}\nMonitor: ${links.monitor}`)}`, '_blank');
+        }
     </script>
 </body>
 </html>
