@@ -137,20 +137,42 @@
             });
         }
 
-        function cargarSalas() {
+
+function cargarSalas() {
             db.ref('salas').on('value', (snapshot) => {
                 const lista = document.getElementById('listaSalas');
                 lista.innerHTML = "";
                 snapshot.forEach((child) => {
                     const nombre = child.key;
-                    lista.innerHTML += `<tr><td>${nombre}</td><td><button class="red-btn" onclick="eliminarSala('${nombre}')">Eliminar</button></td></tr>`;
+                    // Fila con botones de Editar y Eliminar
+                    lista.innerHTML += `
+                        <tr>
+                            <td>${nombre}</td>
+                            <td>
+                                <button class="blue-btn" style="padding:5px; font-size:12px; margin-right:5px;" onclick="editarSala('${nombre}')">Editar</button>
+                                <button class="red-btn" style="padding:5px; font-size:12px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
+                            </td>
+                        </tr>`;
                 });
             });
         }
 
-        function eliminarSala(nombre) {
-            if (confirm("¿Eliminar sala: " + nombre + "?")) {
-                db.ref('salas/' + nombre).remove();
+        function editarSala(nombreActual) {
+            const nuevoNombre = prompt("Introduce el nuevo nombre para la sala:", nombreActual);
+            
+            // Validamos que el nombre no esté vacío y sea distinto al original
+            if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) {
+                const nombreLimpio = nuevoNombre.trim().replace(/\s+/g, '-');
+                
+                // 1. Creamos la nueva entrada
+                db.ref('salas/' + nombreLimpio).set({ 
+                    creadoPor: auth.currentUser.email, 
+                    fecha: Date.now() 
+                }).then(() => {
+                    // 2. Eliminamos la antigua
+                    db.ref('salas/' + nombreActual).remove();
+                    alert("Sala renombrada con éxito.");
+                }).catch(e => alert("Error: " + e.message));
             }
         }
     </script>
