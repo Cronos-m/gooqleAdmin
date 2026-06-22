@@ -8,9 +8,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding-top: 50px; }
-        .box { background: #1e293b; padding: 20px; border-radius: 10px; display: inline-block; }
-        input { padding: 10px; width: 250px; border-radius: 5px; border: none; margin-bottom: 10px; }
+        .box { background: #1e293b; padding: 20px; border-radius: 10px; display: inline-block; width: 80%; max-width: 500px; }
+        input { padding: 10px; width: 80%; border-radius: 5px; border: none; margin-bottom: 10px; }
         button { padding: 10px 20px; background: #3b82f6; border: none; color: white; cursor: pointer; border-radius: 5px; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { padding: 10px; border-bottom: 1px solid #334155; }
+        .del-btn { background: #ef4444; }
     </style>
 </head>
 <body>
@@ -25,22 +28,29 @@
         <input type="text" id="sala" placeholder="Nombre de la nueva sala">
         <br>
         <button onclick="gestionarSala()">Crear Sala</button>
+        
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #334155;">
+        
+        <h2>Salas Activas</h2>
+        <table>
+            <thead><tr><th>Sala</th><th>Acción</th></tr></thead>
+            <tbody id="listaSalas"></tbody>
+        </table>
     </div>
 
     <script>
         const firebaseConfig = {
-          apiKey: "AIzaSyBi0obHdwbHfhWhgsk0ZEvDqYryKISOZn8",
-          authDomain: "gooqledata.firebaseapp.com",
-          databaseURL: "https://gooqledata-default-rtdb.firebaseio.com",
-          projectId: "gooqledata",
-          storageBucket: "gooqledata.firebasestorage.app",
-          messagingSenderId: "449823780048",
-          appId: "1:449823780048:web:2bc34766c04d0b39f5c2d5",
-          measurementId: "G-GXZKGD7KLF"
+            apiKey: "AIzaSyBi0obHdwbHfhWhgsk0ZEvDqYryKISOZn8",
+            authDomain: "gooqledata.firebaseapp.com",
+            databaseURL: "https://gooqledata-default-rtdb.firebaseio.com",
+            projectId: "gooqledata",
+            storageBucket: "gooqledata.firebasestorage.app",
+            messagingSenderId: "449823780048",
+            appId: "1:449823780048:web:2bc34766c04d0b39f5c2d5",
+            measurementId: "G-GXZKGD7KLF"
         };
 
         firebase.initializeApp(firebaseConfig);
-
         const auth = firebase.auth();
         const db = firebase.database();
 
@@ -49,21 +59,19 @@
             auth.signInWithPopup(provider).catch(e => alert("Error: " + e.message));
         }
 
-        // 2. VALIDACIÓN DE ACCESO MAESTRO
         auth.onAuthStateChanged(user => {
             if (user) {
-                // CAMBIA ESTO POR TU CORREO REAL
                 if (user.email === "luistorresbruno52@gmail.com") {
                     document.getElementById('login-section').style.display = 'none';
                     document.getElementById('admin-section').style.display = 'block';
+                    cargarSalas();
                 } else {
-                    alert("Acceso denegado: No eres el maestro.");
+                    alert("Acceso denegado.");
                     auth.signOut();
                 }
             }
         });
 
-        // 3. LÓGICA DE CREACIÓN DE SALAS
         function gestionarSala() {
             const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
             if (!sala) return;
@@ -72,13 +80,27 @@
                 if (snapshot.exists()) {
                     alert("¡Error: Sala ya existente!");
                 } else {
-                    db.ref('salas/' + sala).set({
-                        creadoPor: auth.currentUser.email,
-                        fecha: Date.now()
-                    });
-                    alert("Sala '" + sala + "' creada con éxito.");
+                    db.ref('salas/' + sala).set({ creadoPor: auth.currentUser.email, fecha: Date.now() });
+                    document.getElementById('sala').value = "";
                 }
             });
+        }
+
+        function cargarSalas() {
+            db.ref('salas').on('value', (snapshot) => {
+                const lista = document.getElementById('listaSalas');
+                lista.innerHTML = "";
+                snapshot.forEach((child) => {
+                    const nombre = child.key;
+                    lista.innerHTML += `<tr><td>${nombre}</td><td><button class="del-btn" onclick="eliminarSala('${nombre}')">Eliminar</button></td></tr>`;
+                });
+            });
+        }
+
+        function eliminarSala(nombre) {
+            if (confirm("¿Eliminar sala: " + nombre + "?")) {
+                db.ref('salas/' + nombre).remove();
+            }
         }
     </script>
 </body>
