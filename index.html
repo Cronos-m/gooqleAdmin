@@ -146,30 +146,37 @@ function eliminarSala(nombre) {
             }
         }
 
-function enviarTelegram(nombreSala, links) {
-    const token = "8642789057:AAET8otpQWLg3xoNFQwdRupbOVXgxVT0vcU"; 
-    const chatId = "1304022395"; 
+async function enviarTelegram(nombreSala, links) {
+    // Esta es la URL de tu Webhook de Make
+    const webhookURL = "https://hook.us2.make.com/xv46gl6b0b5cml173dm94u133mfx5ofr";
     
-    const mensaje = `✅ *Sala: ${nombreSala}*\n\n` +
+    // Construimos el mensaje igual que antes, pero lo enviamos al Webhook
+    const mensaje = `✅ Sala: ${nombreSala}\n\n` +
                     `🌐 Google: ${links.google}\n` +
                     `📺 YouTube: ${links.youtube}\n` +
                     `🖥 Monitor: ${links.monitor}`;
-    
-    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}&parse_mode=Markdown`;
-    
-    fetch(url)
-        .then(r => r.json())
-        .then(data => {
-            if (data.ok) {
-                alert("¡Mensaje enviado a Telegram correctamente!");
-            } else {
-                alert("Error de Telegram: " + data.description);
-                console.error(data);
-            }
-        })
-        .catch(e => {
-            alert("Error al conectar con Telegram: " + e.message);
+
+    try {
+        const response = await fetch(webhookURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sala: nombreSala,
+                google: links.google,
+                youtube: links.youtube,
+                monitor: links.monitor,
+                textoCompleto: mensaje
+            })
         });
+
+        if (response.ok) {
+            alert("¡Solicitud enviada a Make correctamente!");
+        } else {
+            alert("Error al contactar con Make.");
+        }
+    } catch (e) {
+        alert("Error al conectar: " + e.message);
+    }
 }
 
         function enviarWhatsApp(links) {
