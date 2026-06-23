@@ -95,10 +95,9 @@
                 monitor: "https://tu-monitor.com/" + sala
             };
             db.ref('salas/' + sala).set({ creadoPor: auth.currentUser.email, fecha: Date.now(), links: links }).then(() => {
-                alert("Sala creada.");
-                enviarTelegram(sala, links);
-            });
-        }
+    alert("Sala creada.");
+    enviarTelegram(sala);
+});        }
 
       function cargarSalas() {
     db.ref('salas').on('value', (snapshot) => {
