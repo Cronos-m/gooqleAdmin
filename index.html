@@ -146,32 +146,24 @@ function eliminarSala(nombre) {
             }
         }
 
-async function enviarTelegram(nombreSala, links) {
-    const webhookURL = "https://hook.us2.make.com/6oje2nc3d3bisl14j13673wifc384uye";
+function enviarTelegram(nombreSala, links) {
+    // URL base de tu Webhook
+    const baseUrl = "https://hook.us2.make.com/6oje2nc3d3bisl14j13673wifc384uye";
     
-    // Construimos el JSON con los datos que Make necesita
-    const datosEnvio = {
-        sala: nombreSala,
-        google: links.google,
-        youtube: links.youtube,
-        monitor: links.monitor
-    };
+    // Construimos la URL con los datos como parámetros
+    const url = `${baseUrl}?sala=${encodeURIComponent(nombreSala)}&google=${encodeURIComponent(links.google)}&youtube=${encodeURIComponent(links.youtube)}&monitor=${encodeURIComponent(links.monitor)}`;
 
-    try {
-        const response = await fetch(webhookURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datosEnvio)
+    fetch(url)
+        .then(response => {
+            if (response.ok) {
+                alert("¡Solicitud enviada a Make!");
+            } else {
+                alert("Error al contactar con Make.");
+            }
+        })
+        .catch(e => {
+            alert("Error: " + e.message);
         });
-
-        if (response.ok) {
-            alert("¡Solicitud enviada a Make!");
-        } else {
-            alert("Error al contactar con Make.");
-        }
-    } catch (e) {
-        alert("Error: " + e.message);
-    }
 }
         function enviarWhatsApp(links) {
             const telefono = prompt("Número de WhatsApp (ej: 573001234567):");
