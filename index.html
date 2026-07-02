@@ -87,25 +87,46 @@
                     const nombre = child.key;
                     const linksStr = JSON.stringify(child.val().links).replace(/"/g, '&quot;');
                     lista.innerHTML += `<tr><td>${nombre}</td><td>
+                        <button class="blue-btn" style="padding:4px; font-size:10px;" onclick="editarSala('${nombre}')">Editar</button>
                         <button class="red-btn" style="padding:4px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
-                        <button style="padding:4px; font-size:10px; background:#10b981;" onclick="enviarTelegram('${nombre}')">Telegram</button>
-                        <button style="padding:4px; font-size:10px; background:#8b5cf6;" onclick="enviarWhatsApp(${linksStr})">WhatsApp</button>
+                        <br>
+                        <button style="padding:4px; font-size:10px; margin-top:5px; background:#10b981;" onclick="enviarTelegram('${nombre}')">Telegram</button>
+                        <button style="padding:4px; font-size:10px; margin-top:5px; background:#8b5cf6;" onclick="enviarWhatsApp(${linksStr})">WhatsApp</button>
                     </td></tr>`;
                 });
             });
         }
 
+        // --- FUNCIÓN EDITAR RECUPERADA ---
+        function editarSala(nombreActual) {
+            const nuevoNombre = prompt("Nuevo nombre para la sala:", nombreActual);
+            if (nuevoNombre && nuevoNombre !== nombreActual) {
+                const salaLimpia = nuevoNombre.replace(/\s+/g, '-');
+                db.ref('salas/' + nombreActual).once('value', (snap) => {
+                    const data = snap.val();
+                    // Actualizamos los links con el nuevo nombre
+                    const baseUrl = "https://gooqledata.web.app";
+                    data.links = {
+                        google: `${baseUrl}/g${salaLimpia}`,
+                        youtube: `${baseUrl}/yt${salaLimpia}`,
+                        monitor: `${baseUrl}/m${salaLimpia}`
+                    };
+                    db.ref('salas/' + salaLimpia).set(data);
+                    db.ref('salas/' + nombreActual).remove();
+                });
+            }
+        }
+
         function enviarWhatsApp(links) {
             const telefono = prompt("Número (ej: 573001234567):");
             if (telefono) {
-                // --- AQUÍ PUEDES EDITAR EL MENSAJE ---
-                const mensaje = `¡Hola! Aquí tienes tus accesos exclusivos:\n\nGoogle: ${links.google}\nYouTube: ${links.youtube}\nPanel: ${links.monitor}\n\n¡Gracias por usar nuestro servicio!`;
-                // --------------------------------------
+                // AQUÍ puedes editar el texto de tu mensaje
+                const mensaje = `¡Hola! Aquí tienes tus accesos:\n\nGoogle: ${links.google}\nYouTube: ${links.youtube}\nMonitor: ${links.monitor}\n\n¡Gracias por preferirnos!`;
                 window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank');
             }
         }
 
-        function eliminarSala(n) { if (confirm("¿Eliminar "+n+"?")) db.ref('salas/'+n).remove(); }
+        function eliminarSala(n) { if (confirm("¿Eliminar sala " + n + "?")) db.ref('salas/'+n).remove(); }
         function enviarTelegram(s) { fetch("https://hook.us2.make.com/g8tssskmt41fywhbdabmssisov57ky92", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({sala: s}) }); }
     </script>
 </body>
