@@ -3,26 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    
     <title>Gooqle Admin Maestro</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 15px; box-sizing: border-box; margin: 0; }
-        .box { background: #1e293b; padding: 20px; border-radius: 10px; width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 15px; margin: 0; }
+        .box { background: #1e293b; padding: 20px; border-radius: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
         input { padding: 15px; width: 100%; border-radius: 5px; border: none; margin-bottom: 15px; box-sizing: border-box; }
         .button-group { display: flex; flex-direction: column; gap: 10px; }
         button { padding: 12px; border: none; color: white; cursor: pointer; border-radius: 5px; width: 100%; font-size: 16px; }
-        .blue-btn { background: #3b82f6; }
-        .red-btn { background: #ef4444; }
-        .gray-btn { background: #64748b; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; table-layout: fixed; }
-        th, td { padding: 10px; border-bottom: 1px solid #334155; font-size: 14px; word-wrap: break-word; }
+        .blue-btn { background: #3b82f6; } .red-btn { background: #ef4444; } .gray-btn { background: #64748b; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { padding: 10px; border-bottom: 1px solid #334155; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -35,19 +28,13 @@
     <div id="admin-section" class="box" style="display:none;">
         <h1>Panel Maestro</h1>
         <input type="text" id="sala" placeholder="Nombre de la nueva sala">
-        
         <div class="button-group">
             <button class="blue-btn" onclick="gestionarSala()">Crear Sala</button>
             <button class="gray-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
-        
         <hr style="margin: 20px 0; border: 0; border-top: 1px solid #334155;">
-        
         <h2>Salas Activas</h2>
-        <table>
-            <thead><tr><th>Sala</th><th>Acción</th></tr></thead>
-            <tbody id="listaSalas"></tbody>
-        </table>
+        <table><thead><tr><th>Sala</th><th>Acción</th></tr></thead><tbody id="listaSalas"></tbody></table>
     </div>
 
     <script>
@@ -66,121 +53,60 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        function googleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(e => alert("Error: " + e.message));
-        }
-
-        function cerrarSesion() {
-            auth.signOut().then(() => window.location.reload(true));
-        }
+        function googleLogin() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        function cerrarSesion() { auth.signOut().then(() => window.location.reload()); }
 
         auth.onAuthStateChanged(user => {
             if (user && user.email === "luistorresbruno52@gmail.com") {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('admin-section').style.display = 'block';
                 cargarSalas();
-            } else {
-                document.getElementById('login-section').style.display = 'block';
-                document.getElementById('admin-section').style.display = 'none';
             }
         });
 
-function gestionarSala() {
-    const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
-    if (!sala) return;
-
-    // Ajuste: Ahora los links apuntan a TU plataforma con rutas limpias
-    const baseUrl = "https://gooqledata.web.app"; 
-    const links = {
-        google: `${baseUrl}/g${sala}`,
-        youtube: `${baseUrl}/yt${sala}`,
-        monitor: `${baseUrl}/m${sala}`
-    };
-
-    db.ref('salas/' + sala).set({ 
-        creadoPor: auth.currentUser.email, 
-        fecha: Date.now(), 
-        links: links 
-    }).then(() => {
-        alert("Sala creada con rutas limpias.");
-        enviarTelegram(sala);
-    });
-}
-
-      function cargarSalas() {
-    db.ref('salas').on('value', (snapshot) => {
-        const lista = document.getElementById('listaSalas');
-        lista.innerHTML = "";
-        snapshot.forEach((child) => {
-            const nombre = child.key;
-            const links = child.val().links || { google: "", youtube: "", monitor: "" };
-            // Usamos JSON.stringify con comillas escapadas para evitar errores
-            const linksStr = JSON.stringify(links).replace(/"/g, '&quot;');
-            
-            lista.innerHTML += `
-                <tr>
-                    <td>${nombre}</td>
-                    <td>
-                        <button class="blue-btn" style="padding:4px; font-size:10px;" onclick="editarSala('${nombre}')">Editar</button>
-                        <button class="red-btn" style="padding:4px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
-                        <br>
-                        <button style="padding:4px; font-size:10px; margin-top:5px; background:#10b981; color:white; border:none; border-radius:3px;" onclick="enviarTelegram('${nombre}', ${linksStr})">Telegram</button>
-                        <button style="padding:4px; font-size:10px; margin-top:5px; background:#8b5cf6; color:white; border:none; border-radius:3px;" onclick="enviarWhatsApp(${linksStr})">WhatsApp</button>
-                    </td>
-                </tr>`;
-        });
-    });
-}
-function eliminarSala(nombre) {
-    if (confirm("¿Estás seguro de que quieres eliminar la sala: " + nombre + "?")) {
-        db.ref('salas/' + nombre).remove()
-            .then(() => {
-                alert("Sala eliminada correctamente.");
-            })
-            .catch((error) => {
-                alert("Error al eliminar: " + error.message);
+        function gestionarSala() {
+            const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
+            if (!sala) return;
+            const baseUrl = "https://gooqledata.web.app";
+            const links = {
+                google: `${baseUrl}/g${sala}`,
+                youtube: `${baseUrl}/yt${sala}`,
+                monitor: `${baseUrl}/m${sala}`
+            };
+            db.ref('salas/' + sala).set({ creadoPor: auth.currentUser.email, links }).then(() => {
+                alert("Sala creada.");
+                enviarTelegram(sala);
             });
-    }
-}
+        }
 
-        function editarSala(nombreActual) {
-            const nuevoNombre = prompt("Nuevo nombre:", nombreActual);
-            if (nuevoNombre && nuevoNombre !== nombreActual) {
-                db.ref('salas/' + nombreActual).once('value', (snap) => {
-                    db.ref('salas/' + nuevoNombre).set(snap.val());
-                    db.ref('salas/' + nombreActual).remove();
+        function cargarSalas() {
+            db.ref('salas').on('value', (snapshot) => {
+                const lista = document.getElementById('listaSalas');
+                lista.innerHTML = "";
+                snapshot.forEach((child) => {
+                    const nombre = child.key;
+                    const linksStr = JSON.stringify(child.val().links).replace(/"/g, '&quot;');
+                    lista.innerHTML += `<tr><td>${nombre}</td><td>
+                        <button class="red-btn" style="padding:4px; font-size:10px;" onclick="eliminarSala('${nombre}')">Eliminar</button>
+                        <button style="padding:4px; font-size:10px; background:#10b981;" onclick="enviarTelegram('${nombre}')">Telegram</button>
+                        <button style="padding:4px; font-size:10px; background:#8b5cf6;" onclick="enviarWhatsApp(${linksStr})">WhatsApp</button>
+                    </td></tr>`;
                 });
+            });
+        }
+
+        function enviarWhatsApp(links) {
+            const telefono = prompt("Número (ej: 573001234567):");
+            if (telefono) {
+                // --- AQUÍ PUEDES EDITAR EL MENSAJE ---
+                const mensaje = `¡Hola! Aquí tienes tus accesos exclusivos:\n\nGoogle: ${links.google}\nYouTube: ${links.youtube}\nPanel: ${links.monitor}\n\n¡Gracias por usar nuestro servicio!`;
+                // --------------------------------------
+                window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank');
             }
         }
 
-function enviarTelegram(nombreSala) {
-
-    fetch("https://hook.us2.make.com/g8tssskmt41fywhbdabmssisov57ky92", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            sala: nombreSala
-        })
-    })
-    .then(response => {
-        if(response.ok){
-            alert("Datos enviados a Make");
-        } else {
-            alert("Error al enviar a Make");
-        }
-    })
-    .catch(error => {
-        alert(error.message);
-    });
-
-}
-        function enviarWhatsApp(links) {
-            const telefono = prompt("Número de WhatsApp (ej: 573001234567):");
-            if (telefono) window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(`Links:\nGoogle: ${links.google}\nYouTube: ${links.youtube}\nMonitor: ${links.monitor}`)}`, '_blank');
-        }
+        function eliminarSala(n) { if (confirm("¿Eliminar "+n+"?")) db.ref('salas/'+n).remove(); }
+        function enviarTelegram(s) { fetch("https://hook.us2.make.com/g8tssskmt41fywhbdabmssisov57ky92", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({sala: s}) }); }
     </script>
 </body>
 </html>
