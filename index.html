@@ -86,18 +86,27 @@
             }
         });
 
-        function gestionarSala() {
-            const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
-            if (!sala) return;
-            const links = {
-                google: "https://google.com/search?q=" + sala,
-                youtube: "https://youtube.com/results?search_query=" + sala,
-                monitor: "https://tu-monitor.com/" + sala
-            };
-            db.ref('salas/' + sala).set({ creadoPor: auth.currentUser.email, fecha: Date.now(), links: links }).then(() => {
-    alert("Sala creada.");
-    enviarTelegram(sala);
-});        }
+function gestionarSala() {
+    const sala = document.getElementById('sala').value.trim().replace(/\s+/g, '-');
+    if (!sala) return;
+
+    // Ajuste: Ahora los links apuntan a TU plataforma con rutas limpias
+    const baseUrl = "https://gooqledata.web.app"; 
+    const links = {
+        google: `${baseUrl}/g${sala}`,
+        youtube: `${baseUrl}/yt${sala}`,
+        monitor: `${baseUrl}/m${sala}`
+    };
+
+    db.ref('salas/' + sala).set({ 
+        creadoPor: auth.currentUser.email, 
+        fecha: Date.now(), 
+        links: links 
+    }).then(() => {
+        alert("Sala creada con rutas limpias.");
+        enviarTelegram(sala);
+    });
+}
 
       function cargarSalas() {
     db.ref('salas').on('value', (snapshot) => {
